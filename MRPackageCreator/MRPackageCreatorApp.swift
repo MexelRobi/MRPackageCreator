@@ -13,5 +13,6 @@ struct MRPackageCreatorApp: App {
         WindowGroup {
             ContentView()
         }
+        .windowStyle(.hiddenTitleBar)
     }
 }
