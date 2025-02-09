@@ -11,7 +11,7 @@ import SwiftUI
 struct MRPackageCreatorApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            Workspace()
         }
         .windowStyle(.hiddenTitleBar)
     }

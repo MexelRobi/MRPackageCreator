@@ -7,3 +7,7 @@
 //
 
 import Foundation
+
+class Globals {
+    static var finalOutput : String = ""
+}

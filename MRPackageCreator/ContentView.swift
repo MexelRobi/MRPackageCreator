@@ -3,7 +3,7 @@ import AppKit
 import UniformTypeIdentifiers
 
 struct ContentView: View {
-    @State private var packageName: String = ""
+    @State var packageName: String = ""
     @State private var installLocation: String = "/Applications"
     @State private var licensePath: String = ""
     @State private var appPath: String = ""
@@ -11,7 +11,6 @@ struct ContentView: View {
     @State private var selectedCertificate: String = ""
     @State private var availableCertificates: [String] = []
     @State private var licenseFileName: String = ""
-    
     @State private var showFilePicker = false
     @State private var showLicensePicker = false
     @State private var showAppPicker = false
@@ -79,6 +78,15 @@ struct ContentView: View {
             Button("Choose") { showPicker.wrappedValue = true }
                 .font(.body)
                 .foregroundColor(.blue)
+                .padding()
+                Button(action: {
+                path.wrappedValue = ""
+            }) {
+                Image(systemName: "xmark.circle.fill")
+            }
+            .padding()
+            .buttonBorderShape(.circle)
+            .buttonStyle(.borderedProminent)
         }
         .padding(.all, 8)
         .background(Color(NSColor.secondarySystemFill))
@@ -135,7 +143,10 @@ struct ContentView: View {
             
             let distributionXML = createDistributionXML(packageName: packageName, licenseFileName: licenseFileName, pkgPath: pkgPath)
             try distributionXML.write(toFile: distributionPath, atomically: true, encoding: .utf8)
-            
+            var signCommand = ""
+                        if !selectedCertificate.isEmpty {
+                            signCommand = "--sign \"\(selectedCertificate)\""
+                        }
             
             if FileManager.default.fileExists(atPath: licensePath) {
                 let finalCommand = """
@@ -153,13 +164,14 @@ cp -R \(distributionPath) ~/Desktop/pkg_build/Distribution.xml
 productbuild --distribution ~/Desktop/pkg_build/Distribution.xml \
              --package-path ~/Desktop/pkg_build/ \
              --resources \(outputPath) \
+            \(signCommand) \
              ~/Desktop/\(packageName)_Installer.pkg
             rm -rf ~/Desktop/pkg_build
             rm -rf ~/Desktop/Distribution.xml
 """
 
-                let finalOutput = runShellCommand(finalCommand)
-                print("productbuild output: \(finalOutput)")
+                Globals.finalOutput = runShellCommand(finalCommand)
+                print("productbuild output: \(Globals.finalOutput)")
             } else {
                 let finalCommand = """
 mkdir -p ~/Desktop/pkg_build/root/
@@ -175,6 +187,7 @@ cp -R \(distributionPath) ~/Desktop/pkg_build/Distribution.xml
 productbuild --distribution ~/Desktop/pkg_build/Distribution.xml \
              --package-path ~/Desktop/pkg_build/ \
              --resources \(outputPath) \
+            \(signCommand) \
              ~/Desktop/\(packageName)_Installer.pkg
             rm -rf ~/Desktop/pkg_build
             rm -rf ~/Desktop/Distribution.xml

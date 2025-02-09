@@ -1,19 +1,42 @@
-//
-//  Console.swift
-//  MRPackageCreator
-//
-//  Created by Giuseppe, Alfio, Tiziano Maugeri on 09.02.2025.
-//  Copyright © 2025 MexelRobi. All rights reserved.
-//
-
 import SwiftUI
+import os.log
 
-struct Console: View {
+
+
+struct DebugConsoleView: View {
+    
+    @State var finalOutput = Globals.finalOutput
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
+        VStack {
+            Text("System Console")
+                .font(.headline)
+            ScrollView {
+                Text(finalOutput)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .onAppear() {
+                        DispatchQueue.global(qos: .background).async {
+                                while true {
+                                    DispatchQueue.main.async {
+                                        finalOutput = Globals.finalOutput
+                                    }
+                                    Thread.sleep(forTimeInterval: 1.0) // Wartezeit
+                                }
+                            }
+                    }
+                    
+            }
+            .background(Color.black.opacity(0.1))
+            .cornerRadius(8)
+            
 
-#Preview {
-    Console()
+            
+        }
+        .padding()
+        
+        
+    }
+    
 }
