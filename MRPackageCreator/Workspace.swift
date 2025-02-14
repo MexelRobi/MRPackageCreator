@@ -1,39 +1,10 @@
 import SwiftUI
 
-class ConsoleWindowManager {
-    static let shared = ConsoleWindowManager()
-    private var consoleWindow: NSWindow?
 
-    private init() {}
 
-    func showConsole() {
-        if consoleWindow == nil {
-            let newWindow = NSWindow(
-                contentRect: NSMakeRect(0, 0, 400, 300),
-                styleMask: [.titled],
-                backing: .buffered,
-                defer: false
-            )
-            newWindow.title = "Console"
-            newWindow.center()
-
-            let hostingController = NSHostingController(rootView: DebugConsoleView())
-            newWindow.contentView = hostingController.view
-            newWindow.makeKeyAndOrderFront(nil)
-            
-            self.consoleWindow = newWindow
-            
-            // Event Listener: Falls das Fenster geschlossen wird, referenz löschen
-            NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: newWindow, queue: nil) { _ in
-                self.consoleWindow = nil
-            }
-        } else {
-            consoleWindow?.makeKeyAndOrderFront(nil)
-        }
-    }
-}
 
 struct Workspace: View {
+    @State var showconsoleWindow = false
     var body: some View {
         NavigationView {
             List {
@@ -41,7 +12,7 @@ struct Workspace: View {
                     Label("Project", systemImage: "folder")
                 }
                 Button(action: {
-                    ConsoleWindowManager.shared.showConsole()
+                    showconsoleWindow = true
                 }) {
                     Label("Console", systemImage: "terminal")
                 }
@@ -52,6 +23,24 @@ struct Workspace: View {
             Text("Select an option")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .sheet(isPresented: $showconsoleWindow) {
+            HStack {
+                Spacer()
+                Button {
+                    showconsoleWindow = false
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Color.red)
+                }
+                .buttonBorderShape(.circle)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.extraLarge)
+                .padding()
+            }
+            DebugConsoleView()
+                .frame(width: 500, height: 300)
+        }
+        
     }
 }
 

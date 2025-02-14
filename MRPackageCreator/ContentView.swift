@@ -15,6 +15,14 @@ struct ContentView: View {
     @State private var showLicensePicker = false
     @State private var showAppPicker = false
     @State private var showOutputPicker = false
+    @State private var showNotarization = false
+    
+    @State private var appleid = ""
+    @State private var appSpecificPassword = ""
+    @State private var teamID = ""
+    
+    @State private var isProcessing = false
+    @State private var progress: Double = 0.0
     
     var body: some View {
         VStack {
@@ -49,12 +57,35 @@ struct ContentView: View {
             .padding(.horizontal)
             .onAppear(perform: fetchAvailableCertificates)
             
+            HStack {
+                Text("Notarization")
+                    .font(.body)
+                Spacer()
+                Button {
+                    showNotarization = true
+                } label: {
+                    Text("Apple Developer ID")
+                }
+                .font(.body)
+                .foregroundColor(.blue)
+                .padding()
+            }
+            .padding(.all, 8)
+            .background(Color(NSColor.secondarySystemFill))
+            .cornerRadius(8)
+            .padding(.horizontal)
+            
             Spacer()
+            
+            if isProcessing {
+                            ProgressView("Creating Package", value: progress, total: 100)
+                                .padding()
+                        }
             
             Button("Create .pkg", action: checkAndInstallCommandLineTools)
                 .frame(maxWidth: .infinity, minHeight: 50) // Macht ihn breit und hoch genug
                 .padding(.horizontal) // Fügt einen Rand hinzu
-                .disabled(packageName.isEmpty || outputPath.isEmpty || appPath.isEmpty || selectedCertificate.isEmpty)
+                .disabled(isProcessing || packageName.isEmpty || outputPath.isEmpty || appPath.isEmpty || selectedCertificate.isEmpty || appleid.isEmpty || appSpecificPassword.isEmpty || teamID.isEmpty)
                 .buttonStyle(.borderedProminent) // macOS-Stil mit 3D-Effekt
                 .controlSize(.extraLarge)
         }
@@ -64,7 +95,33 @@ struct ContentView: View {
         .fileImporter(isPresented: $showAppPicker, allowedContentTypes: [UTType.application]) { handleFileSelection($0, for: &appPath) }
         VStack {}
         .fileImporter(isPresented: $showOutputPicker, allowedContentTypes: [.folder]) { handleFileSelection($0, for: &outputPath) }
+        VStack {}
+            .sheet(isPresented: $showNotarization) {
+                VStack {
+                    TextField("Enter your Apple Developer ID here", text: $appleid)
+                    TextField("Enter your App-Specific-Password here", text: $appSpecificPassword)
+                    TextField("Enter your Team ID here", text: $teamID)
+                    HStack {
+                        Button {
+                            showNotarization = false
+                        } label: {
+                            Text("OK")
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 50) // Macht ihn breit und hoch genug
+                        .padding(.horizontal) // Fügt einen Rand hinzu
+                        .buttonStyle(.borderedProminent) // macOS-Stil mit 3D-Effekt
+                        .controlSize(.extraLarge)
+                    }
+                    .padding()
+                }
+                .padding()
+            }
+        
     }
+        
+    
+    
+    
     
     private func fileSelectionView(title: String, path: Binding<String>, showPicker: Binding<Bool>) -> some View {
         HStack {
@@ -98,7 +155,7 @@ struct ContentView: View {
         switch result {
         case .success(let url):
             path = url.path
-            if url.lastPathComponent.hasSuffix(".txt") || url.lastPathComponent.hasSuffix(".pdf") || url.lastPathComponent.hasSuffix(".rtf") {
+            if url.lastPathComponent.hasSuffix(".txt") {
                 licenseFileName = url.lastPathComponent
             }
         case .failure(let error):
@@ -126,27 +183,35 @@ struct ContentView: View {
     }
     
     private func createPackage() {
+        isProcessing = true
+        progress = 0.0
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(packageName)
         let pkgPath = "\(outputPath)/\(packageName).pkg"
         let finalPkgPath = "\(outputPath)/\(packageName).pkg"
         let distributionPath = "\(outputPath)/Distribution.xml"
         let appName = URL(fileURLWithPath: appPath).lastPathComponent
         print("Package Name: \(packageName)")
-            print("App Path: \(appPath)")
-            print("License Path: \(licensePath)")
-            print("Output Path: \(outputPath)")
-           print("Selected Certificate: \(selectedCertificate)")
+        print("App Path: \(appPath)")
+        print("License Path: \(licensePath)")
+        print("Output Path: \(outputPath)")
+        print("Selected Certificate: \(selectedCertificate)")
         print("Distribution XML Path: \(distributionPath)")
         
+        self.progress = 0.4
+        
+        DispatchQueue.global(qos: .background).async {
+        
+            self.progress = 0.6
+            
         do {
             
             
             let distributionXML = createDistributionXML(packageName: packageName, licenseFileName: licenseFileName, pkgPath: pkgPath)
             try distributionXML.write(toFile: distributionPath, atomically: true, encoding: .utf8)
             var signCommand = ""
-                        if !selectedCertificate.isEmpty {
-                            signCommand = "--sign \"\(selectedCertificate)\""
-                        }
+            if !selectedCertificate.isEmpty {
+                signCommand = "--sign \"\(selectedCertificate)\""
+            }
             
             if FileManager.default.fileExists(atPath: licensePath) {
                 let finalCommand = """
@@ -156,6 +221,7 @@ pkgbuild --root ~/Desktop/pkg_build/root \
          --identifier com.mrpkg.\(packageName) \
          --version 1.0 \
          --install-location /Applications \
+            \(signCommand) \
          --ownership recommended \
          ~/Desktop/pkg_build/\(packageName).pkg
 mkdir -p ~/Desktop/pkg_build/resources
@@ -169,7 +235,7 @@ productbuild --distribution ~/Desktop/pkg_build/Distribution.xml \
             rm -rf ~/Desktop/pkg_build
             rm -rf ~/Desktop/Distribution.xml
 """
-
+                
                 Globals.finalOutput = runShellCommand(finalCommand)
                 print("productbuild output: \(Globals.finalOutput)")
             } else {
@@ -180,6 +246,7 @@ pkgbuild --root ~/Desktop/pkg_build/root \
          --identifier com.mrpkg.\(packageName) \
          --version 1.0 \
          --install-location /Applications \
+            \(signCommand) \
          --ownership recommended \
          ~/Desktop/pkg_build/\(packageName).pkg
 mkdir -p ~/Desktop/pkg_build/resources
@@ -192,21 +259,51 @@ productbuild --distribution ~/Desktop/pkg_build/Distribution.xml \
             rm -rf ~/Desktop/pkg_build
             rm -rf ~/Desktop/Distribution.xml
 """
-
+                
                 let finalOutput = runShellCommand(finalCommand)
                 print("productbuild output: \(finalOutput)")
+                
             }
             
+            self.progress = 0.9
+            
+            notarizePackage(pkgPath: "~/Desktop/\(packageName)_Installer.pkg")
             
             
-                
-                
-                
+            self.progress = 1.0
             
         } catch {
             print("Error: \(error.localizedDescription)")
         }
+        
+        DispatchQueue.main.async {
+            isProcessing = false
+        }
     }
+    }
+    
+    private func notarizePackage(pkgPath: String) {
+        let appleID = appleid
+        let appSpecificPassword = appSpecificPassword
+            let teamID = teamID
+            
+            let notarizeCommand = """
+            xcrun notarytool submit \(pkgPath) \
+                --apple-id \(appleID) \
+                --password \(appSpecificPassword) \
+                --team-id \(teamID) \
+                --wait
+            """
+            
+            let notarizationOutput = runShellCommand(notarizeCommand)
+            print("Notarization output: \(notarizationOutput)")
+        Globals.finalOutput.append(notarizationOutput)
+            
+            let stapleCommand = "xcrun stapler staple \(pkgPath)"
+            let stapleOutput = runShellCommand(stapleCommand)
+            print("Stapler output: \(stapleOutput)")
+        Globals.finalOutput.append(stapleOutput)
+        }
         
     private func createDistributionXML(packageName: String, licenseFileName: String, pkgPath: String) -> String {
         let appName = URL(fileURLWithPath: appPath).lastPathComponent
@@ -257,16 +354,19 @@ productbuild --distribution ~/Desktop/pkg_build/Distribution.xml \
     }
     
     private func runShellCommand(_ command: String) -> String {
-        let task = Process()
-        let pipe = Pipe()
-        task.launchPath = "/bin/bash"
-        task.arguments = ["-c", command]
-        task.standardOutput = pipe
-        task.standardError = pipe
-        task.launch()
-        task.waitUntilExit()
-        return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-    }
+            let task = Process()
+            let pipe = Pipe()
+            task.launchPath = "/bin/bash"
+            task.arguments = ["-c", command]
+            task.standardOutput = pipe
+            task.standardError = pipe
+            task.launch()
+            task.waitUntilExit()
+            return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        }
 }
 
 
+#Preview {
+    ContentView()
+}
