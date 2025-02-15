@@ -1,1 +1,72 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Übersicht</title>
+    <link rel="icon" href="icon.png" type="image/png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            padding: 40px;
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        .download-btn {
+            padding: 15px 30px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        .download-btn:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <img src="icon.png" alt="App Icon" style="height: 50px;">
+        <h1>Willkommen zur App</h1>
+    </header>
+
+    <div class="container">
+        <h2>Neueste Version herunterladen</h2>
+        <p>Die neueste Version der App ist jetzt verfügbar. Klicken Sie unten, um sie herunterzuladen.</p>
+        <a href="#" class="download-btn" id="download-btn">Jetzt herunterladen</a>
+    </div>
+
+    <script>
+        // Hier die GitHub API verwenden, um den neuesten Release-Link zu holen
+        async function fetchLatestRelease() {
+            const response = await fetch('https://api.github.com/repos/MexelRobi/MRPackageCreator/releases/latest');
+            const data = await response.json();
+            const downloadUrl = data.assets[0].browser_download_url;
+            document.getElementById('download-btn').setAttribute('href', downloadUrl);
+        }
+
+        fetchLatestRelease();
+    </script>
+</body>
+</html>
 
