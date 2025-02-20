@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help - MRPackageCreator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            color: #1d1d1f;
+        }
+        .sidebar {
+            width: 280px;
+            background: #f5f5f7;
+            height: 100vh;
+            box-shadow: 1px 0 10px rgba(0, 0, 0, 0.1);
+            padding: 30px 20px;
+            position: fixed;
+        }
+        .sidebar h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar ul li {
+            padding: 12px 0;
+        }
+        .sidebar ul li a {
+            text-decoration: none;
+            color: #0071e3;
+            font-size: 17px;
+            font-weight: 500;
+            display: block;
+            transition: color 0.3s;
+        }
+        .sidebar ul li a:hover {
+            color: #005bb5;
+        }
+        .container {
+            margin-left: 320px;
+            padding: 60px;
+            max-width: 900px;
+        }
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #0071e3;
+            padding-bottom: 5px;
+        }
+        .accordion {
+            background: #f5f5f7;
+            cursor: pointer;
+            padding: 15px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 18px;
+            transition: 0.3s;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .accordion i {
+            transition: transform 0.3s;
+        }
+        .accordion.active, .accordion:hover {
+            background-color: #e0e0e5;
+        }
+        .accordion.active i {
+            transform: rotate(180deg);
+        }
+        .panel {
+            padding: 15px;
+            display: none;
+            background-color: white;
+            border-left: 4px solid #0071e3;
+            margin-top: 5px;
+            border-radius: 5px;
+            transition: max-height 0.3s ease-out;
+        }
+        code {
+            background: #eee;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>MRPackageCreator Help</h2>
+        <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#issues">Common Issues</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </div>
+    <div class="container">
+        <h2 id="features">Features</h2>
+        <ul>
+            <li>Set package name</li>
+            <li>Select app</li>
+            <li>Add license file</li>
+            <li>Choose signing certificate</li>
+            <li>Notarization with Apple Developer ID</li>
+            <li>Create package</li>
+        </ul>
+        
+        <h2 id="issues">Common Issues</h2>
+        <button class="accordion">Missing Command-Line Tools <i class="fas fa-chevron-down"></i></button>
+        <div class="panel">
+            <p>Run the following command in Terminal:</p>
+            <code>xcode-select --install</code>
+        </div>
+        
+        <button class="accordion">Notarization Problems <i class="fas fa-chevron-down"></i></button>
+        <div class="panel">
+            <p>Run the following command in Terminal:</p>
+            <code>xcrun notarytool submit --help</code>
+        </div>
+        
+        <h2 id="contact">Contact</h2>
+        <p>If you need further assistance, contact support at <a href="mailto:mexelrobi@icloud.com">mexelrobi@icloud.com</a>.</p>
+    </div>
+    
+    <script>
+        document.querySelectorAll('.accordion').forEach(button => {
+            button.addEventListener('click', () => {
+                button.classList.toggle('active');
+                let panel = button.nextElementSibling;
+                let icon = button.querySelector('i');
+                panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+                icon.classList.toggle('rotate');
+            });
+        });
+    </script>
+</body>
+</html>
