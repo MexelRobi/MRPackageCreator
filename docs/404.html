@@ -9,7 +9,10 @@
             font-family: Arial, sans-serif;
             text-align: center;
             background-color: #f4f4f4;
-            color: #333;
+            background-image: url('/assets/404_background.png'); /* Hintergrundbild hier einfügen */
+            background-size: cover; /* Bild wird den gesamten Bildschirm ausfüllen */
+            background-position: center; /* Das Bild bleibt zentriert */
+            color: #fca4a4;
             margin: 0;
             padding: 0;
             display: flex;
@@ -20,6 +23,7 @@
         }
         .container {
             max-width: 600px;
+            z-index: 1; /* Stellt sicher, dass der Text über dem Hintergrundbild liegt */
         }
         h1 {
             font-size: 5rem;
